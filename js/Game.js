@@ -1,6 +1,7 @@
 import { Cell } from './Cell.js'
+import { UI } from './UI.js'
 
-class Game {
+class Game extends UI{
     #config = {
         easy: {
             rows: 8,
@@ -23,11 +24,12 @@ class Game {
     #numberOfCols = null;
     #numberOfMines = null;
     #cells = [];
+    #cellsElements = null;
 
-    constructor() {
-    }
+    #board = null;
 
     initializeGame(){
+        this.#handleElements();
         this.#newGame();
     }
 
@@ -35,8 +37,26 @@ class Game {
         this.#numberOfRows = rows;
         this.#numberOfCols = cols;
         this.#numberOfMines = mines;
+        console.log(this.#numberOfCols);
+
+        this.#setStyles();
 
         this.#generateCells();
+        this.#renderBoard();
+
+        this.#cellsElements = this.getElements(this.UiSelectors.cell)
+        this.#addCellsEventListeners();
+    }
+
+    #handleElements() {
+        this.#board = this.getElement(this.UiSelectors.board);
+    }
+
+    #addCellsEventListeners() {
+        this.#cellsElements.forEach((element) => {
+            element.addEventListener('click', this.#handleCellClick);
+            element.addEventListener('contextmenu', this.#handleCellContextMenu);
+        })
     }
 
     #generateCells(){
@@ -46,6 +66,35 @@ class Game {
                 this.#cells[row].push(new Cell(col, row));
             }
         }
+    }
+
+    #renderBoard() {
+        this.#cells.flat().forEach((cell) => {
+            this.#board.insertAdjacentHTML('beforeend', cell.createElement())
+            cell.element = cell.getElement(cell.selector);
+        })
+    }
+
+    #handleCellClick = (e) => {
+        const target = e.target;
+        const rowIndex = parseInt(target.getAttribute('data-y'), 10);
+        const colIndex = parseInt(target.getAttribute('data-x'), 10);
+        this.#cells[rowIndex][colIndex].revealCell();
+    }
+
+    #handleCellContextMenu = (e) => {
+        e.preventDefault();
+        const target = e.target;
+        const rowIndex = parseInt(target.getAttribute('data-y'), 10);
+        const colIndex = parseInt(target.getAttribute('data-x'), 10);
+        const cell = this.#cells[rowIndex][colIndex];
+
+        if(cell.isReveal) return;
+        cell.toggleFlag();
+    }
+
+    #setStyles(){
+        document.documentElement.style.setProperty('--cells-in-row', this.#numberOfCols)
     }
 }
 

@@ -28,4 +28,8 @@ export class Cell extends UI {
         this.isFlagged = !this.isFlagged;
         this.element.classList.toggle('cell--is-flag');
     }
+
+    addMine() {
+        this.isMine = true;
+    }
 }
